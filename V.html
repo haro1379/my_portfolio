@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Rahul | Nature Through the Lens</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:#050505;--bg-alt:#080808;--bg-card:rgba(255,255,255,0.025);
+      --text:#e8e8e8;--text-sec:#808080;--text-muted:#3a3a3a;
+      --accent:#e8913a;--accent-light:#f0a856;--accent-dim:rgba(232,145,58,0.1);
+      --border:rgba(255,255,255,0.06);--border-h:rgba(255,255,255,0.12);
+      --r:12px;--r-sm:8px;--pill:999px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',sans-serif;font-weight:300;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+    /* ── GRAIN ── */
+    body::after{content:'';position:fixed;inset:0;z-index:9990;pointer-events:none;opacity:.022;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat:repeat;background-size:200px 200px}
+
+    /* ── SCROLL PROGRESS ── */
+    #scrollProg{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent-light));z-index:1001;width:0;pointer-events:none}
+
+    /* ── LOADER ── */
+    .loader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.4rem;transition:opacity .8s ease,visibility .8s}
+    .loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+    .loader-text{font-family:'Space Grotesk',sans-serif;font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-sec)}
+    .loader-bar{width:100px;height:1px;background:var(--border);border-radius:1px;overflow:hidden}
+    .loader-bar-in{width:0;height:100%;background:var(--accent);animation:lFill 2s ease-in-out forwards}
+    @keyframes lFill{to{width:100%}}
+
+    /* ── NAV ── */
+    nav{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:100;display:flex;align-items:center;gap:2.5rem;padding:.6rem 2rem;background:rgba(5,5,5,.6);backdrop-filter:blur(24px) saturate(1.2);border:1px solid var(--border);border-radius:var(--pill);transition:background .3s,border-color .3s}
+    nav.scrolled{background:rgba(5,5,5,.88);border-color:var(--border-h)}
+    .nav-logo{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:.88rem;letter-spacing:.06em;color:var(--text);text-decoration:none;white-space:nowrap}
+    .nav-logo span{color:var(--accent)}
+    .nav-links{display:flex;gap:2rem;list-style:none}
+    .nav-links a{font-family:'Space Grotesk',sans-serif;font-size:.78rem;font-weight:400;letter-spacing:.04em;color:var(--text-sec);text-decoration:none;transition:color .25s}
+    .nav-links a:hover{color:var(--text)}
+    .nav-ham{display:none;flex-direction:column;gap:5px;cursor:pointer;background:none;border:none;padding:4px}
+    .nav-ham span{display:block;width:20px;height:1.5px;background:var(--text-sec);border-radius:1px;transition:all .3s ease;transform-origin:center}
+    .nav-ham.on span:nth-child(1){transform:rotate(45deg) translate(4px,4px)}
+    .nav-ham.on span:nth-child(2){opacity:0}
+    .nav-ham.on span:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}
+
+    /* ── HERO ── */
+    .hero{min-height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;padding:0 8vw}
+    .hero-dots{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.03) 1px,transparent 1px);background-size:28px 28px;mask-image:radial-gradient(ellipse at 55% 50%,black 25%,transparent 65%);-webkit-mask-image:radial-gradient(ellipse at 55% 50%,black 25%,transparent 65%)}
+    #heroCanvas{position:absolute;inset:0;z-index:1;pointer-events:none}
+    .hero-content{position:relative;z-index:2;max-width:650px;animation:hIn 1.2s ease .6s both}
+    @keyframes hIn{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+    .hero-eyebrow{font-family:'Space Grotesk',sans-serif;font-size:.7rem;font-weight:500;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);margin-bottom:1.5rem;display:flex;align-items:center;gap:.8rem}
+    .hero-eyebrow::before{content:'';width:24px;height:1px;background:var(--accent)}
+    .hero-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:clamp(3rem,8vw,6.5rem);line-height:1;margin-bottom:1.5rem}
+    .hero-title .l1{display:block;color:var(--text)}
+    .hero-title .l2{display:block;background:linear-gradient(135deg,var(--accent),var(--accent-light),#fcd5a0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-sub{font-size:1.05rem;color:var(--text-sec);line-height:1.75;max-width:42ch;margin-bottom:2.5rem}
+    .hero-cta{display:inline-flex;align-items:center;gap:.6rem;font-family:'Space Grotesk',sans-serif;font-size:.82rem;font-weight:500;letter-spacing:.06em;color:var(--bg);background:var(--accent);padding:.85rem 2rem;border-radius:var(--pill);text-decoration:none;transition:all .3s ease;border:1px solid transparent}
+    .hero-cta:hover{background:transparent;color:var(--accent);border-color:var(--accent);box-shadow:0 0 30px var(--accent-dim)}
+    .hero-cta svg{width:16px;height:16px;transition:transform .3s}
+    .hero-cta:hover svg{transform:translateX(3px)}
+    .scroll-hint{position:absolute;bottom:2.5rem;left:8vw;z-index:2;display:flex;align-items:center;gap:.8rem}
+    .scroll-hint span{font-family:'Space Grotesk',sans-serif;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--text-muted);writing-mode:vertical-rl}
+    .scroll-line{width:1px;height:48px;background:linear-gradient(to bottom,var(--text-muted),transparent);animation:sPulse 2s ease-in-out infinite}
+    @keyframes sPulse{0%,100%{opacity:.3;transform:scaleY(.5);transform-origin:top}50%{opacity:1;transform:scaleY(1);transform-origin:top}}
+
+    /* ── SECTION COMMON ── */
+    section{padding:8rem 8vw}
+    .s-label{font-family:'Space Grotesk',sans-serif;font-size:.68rem;font-weight:500;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:.8rem}
+    .s-label::before{content:'';width:20px;height:1px;background:var(--accent)}
+    .s-title{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:clamp(1.8rem,4vw,2.8rem);color:var(--text);margin-bottom:1rem;line-height:1.15}
+    .s-desc{font-size:.95rem;color:var(--text-sec);line-height:1.7;max-width:50ch}
+    .s-label.center{justify-content:center}.s-label.center::before{display:none}
+
+    /* ── ABOUT ── */
+    #about{position:relative}
+    .about-grid{display:grid;grid-template-columns:1fr 1.15fr;gap:5rem;align-items:start;max-width:1100px}
+    .about-img{position:relative;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
+    .about-img img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:center 20%;display:block;filter:brightness(.85) saturate(.9);transition:filter .5s,transform .5s}
+    .about-img:hover img{filter:brightness(.95) saturate(1.05);transform:scale(1.03)}
+    .about-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(5,5,5,.35) 0%,transparent 40%);pointer-events:none}
+    .about-txt p{font-size:.95rem;line-height:1.85;color:var(--text-sec);margin-bottom:1.3rem}
+    .about-txt p strong{color:var(--text);font-weight:400}
+    .about-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2rem}
+    .about-tag{font-family:'Space Grotesk',sans-serif;font-size:.7rem;font-weight:400;letter-spacing:.06em;padding:.45rem 1rem;border-radius:var(--pill);border:1px solid var(--border);color:var(--text-sec);transition:all .3s;cursor:default}
+    .about-tag:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+
+    /* ── GALLERY ── */
+    #gallery{background:var(--bg-alt);position:relative}
+    .gal-head{text-align:center;margin-bottom:3rem}
+    .gal-head .s-desc{margin:0 auto 3rem}
+    .gal-filters{display:flex;justify-content:center;flex-wrap:wrap;gap:.5rem;margin-bottom:3rem}
+    .f-btn{font-family:'Space Grotesk',sans-serif;font-size:.72rem;font-weight:400;letter-spacing:.06em;background:transparent;border:1px solid var(--border);color:var(--text-sec);padding:.5rem 1.2rem;border-radius:var(--pill);cursor:pointer;transition:all .3s}
+    .f-btn:hover{border-color:var(--border-h);color:var(--text)}
+    .f-btn.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+    .gal-grid{columns:3 280px;column-gap:12px;max-width:1300px;margin:0 auto}
+    .gal-item{break-inside:avoid;margin-bottom:12px}
+    .gal-card{position:relative;overflow:hidden;border-radius:var(--r-sm);background:#0a0a0a;cursor:pointer;display:block;width:100%;border:1px solid var(--border);transition:border-color .3s,transform .15s ease-out}
+    .gal-card:hover{border-color:var(--border-h)}
+    .gal-card img{width:100%;display:block;transition:transform .6s cubic-bezier(.25,.46,.45,.94),filter .5s;filter:brightness(.82) saturate(.85)}
+    .gal-card:hover img{transform:scale(1.04);filter:brightness(.95) saturate(1.05)}
+    .gal-card-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,5,5,.85) 0%,rgba(5,5,5,.15) 45%,transparent 60%);opacity:0;transition:opacity .4s;display:flex;align-items:flex-end;padding:1rem}
+    .gal-card:hover .gal-card-ov{opacity:1}
+    .gal-card-t{font-family:'Space Grotesk',sans-serif;font-size:.78rem;font-weight:500;color:var(--text);margin-bottom:.15rem}
+    .gal-card-l{font-size:.72rem;color:var(--text-sec)}
+    @keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+
+    /* ── LIGHTBOX ── */
+    .lightbox{position:fixed;inset:0;z-index:200;background:rgba(2,2,2,.96);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:2rem;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .4s ease,visibility .4s}
+    .lightbox.open{opacity:1;visibility:visible;pointer-events:all}
+    .lightbox img{max-width:90vw;max-height:85vh;object-fit:contain;border-radius:var(--r-sm);box-shadow:0 20px 80px rgba(0,0,0,.8);transform:scale(.92);transition:transform .5s cubic-bezier(.25,.46,.45,.94)}
+    .lightbox.open img{transform:scale(1)}
+    .lb-meta{position:fixed;bottom:2.5rem;left:50%;transform:translateX(-50%);text-align:center}
+    .lb-meta-t{font-family:'Space Grotesk',sans-serif;font-size:.82rem;font-weight:500;letter-spacing:.1em;color:var(--text);margin-bottom:.2rem}
+    .lb-meta-l{font-size:.75rem;color:var(--text-sec)}
+    .lb-close{position:fixed;top:1.5rem;right:1.8rem;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--text-sec);cursor:pointer;background:rgba(255,255,255,.05);border:1px solid var(--border);transition:all .25s;z-index:201}
+    .lb-close:hover{background:rgba(255,255,255,.1);color:var(--text)}
+    .lb-arr{position:fixed;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--text-sec);background:rgba(255,255,255,.04);border:1px solid var(--border);cursor:pointer;transition:all .25s;z-index:201}
+    .lb-arr:hover{background:rgba(255,255,255,.08);color:var(--text)}
+    .lb-arr.prev{left:1rem}.lb-arr.next{right:1rem}
+
+    /* ── CONTACT ── */
+    #contact{position:relative;overflow:hidden}
+    .contact-inner{max-width:520px;margin:0 auto;text-align:center}
+    .contact-card{display:flex;flex-direction:column;align-items:center;gap:1.8rem;padding:3rem;border-radius:var(--r);border:1px solid var(--border);background:var(--bg-card);margin-top:2.5rem;transition:border-color .3s}
+    .contact-card:hover{border-color:var(--border-h)}
+    .contact-icon{width:56px;height:56px;border-radius:50%;background:var(--accent-dim);border:1px solid rgba(232,145,58,.15);display:flex;align-items:center;justify-content:center}
+    .contact-icon svg{width:22px;height:22px;stroke:var(--accent);fill:none}
+    .contact-lbl{font-family:'Space Grotesk',sans-serif;font-size:.68rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--text-muted)}
+    .contact-link{font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:500;color:var(--text);text-decoration:none;letter-spacing:.02em;transition:color .3s}
+    .contact-link:hover{color:var(--accent)}
+    .contact-div{width:40px;height:1px;background:var(--border)}
+    .contact-social{display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center}
+    .soc-link{font-family:'Space Grotesk',sans-serif;font-size:.75rem;font-weight:400;color:var(--text-sec);text-decoration:none;padding:.4rem 0;border-bottom:1px solid transparent;transition:all .25s}
+    .soc-link:hover{color:var(--text);border-color:var(--text-sec)}
+
+    /* ── FOOTER ── */
+    footer{border-top:1px solid var(--border);padding:2rem 8vw;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+    footer span{font-family:'Space Grotesk',sans-serif;font-size:.68rem;font-weight:400;letter-spacing:.1em;color:var(--text-muted)}
+
+    /* ── REVEALS ── */
+    .rv{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s ease}
+    .rv-l{opacity:0;transform:translateX(-30px);transition:opacity .8s ease,transform .8s ease}
+    .rv-r{opacity:0;transform:translateX(30px);transition:opacity .8s ease,transform .8s ease}
+    .rv.vis,.rv-l.vis,.rv-r.vis{opacity:1;transform:none}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:900px){.about-grid{grid-template-columns:1fr;gap:3rem}.about-img{max-width:360px}}
+    @media(max-width:768px){
+      section{padding:5rem 6vw}.hero{padding:0 6vw}
+      .nav-ham{display:flex}
+      .nav-links{position:fixed;inset:0;z-index:99;background:rgba(5,5,5,.97);backdrop-filter:blur(24px);flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s,visibility .35s}
+      .nav-links.open{opacity:1;visibility:visible;pointer-events:all}
+      .nav-links a{font-size:1.1rem}
+      .gal-grid{columns:2 160px}
+      .scroll-hint{display:none}
+      footer{justify-content:center;text-align:center;flex-direction:column}
+      nav{top:12px;padding:.5rem 1.2rem;gap:1rem}
+    }
+    @media(max-width:480px){.gal-grid{columns:1}.hero-title{font-size:2.6rem}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+
+<div id="scrollProg"></div>
+
+<div class="loader" id="loader">
+  <div class="loader-text">Loading</div>
+  <div class="loader-bar"><div class="loader-bar-in"></div></div>
+</div>
+
+<nav id="mainNav">
+  <a href="#home" class="nav-logo">R<span>.</span>Photos</a>
+  <button class="nav-ham" id="navHam" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about">About</a></li>
+    <li><a href="#gallery">Gallery</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<section id="home" class="hero">
+  <div class="hero-dots"></div>
+  <div id="heroCanvas"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Nature Through a Smartphone Lens</p>
+    <h1 class="hero-title"><span class="l1">Captured</span><span class="l2">by Rahul</span></h1>
+    <p class="hero-sub">Finding extraordinary detail in the everyday world — skies, flora, fauna, and fading light.</p>
+    <a href="#gallery" class="hero-cta">View Gallery <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+  </div>
+  <div class="scroll-hint"><span>Scroll</span><div class="scroll-line"></div></div>
+</section>
+
+<section id="about">
+  <div class="about-grid">
+    <div class="about-img rv-l"><img src="./images/FILE3405.JPG" alt="Praying mantis — a shot by Rahul"/></div>
+    <div class="about-txt rv-r">
+      <p class="s-label">About</p>
+      <h2 class="s-title">Hello, I'm Rahul</h2>
+      <p>I graduated in <strong>Mathematics</strong>, but my heart has always been drawn toward technology. I started my career as a computer operator, where hands-on experience became my greatest teacher — deepening both my skills and my curiosity for the digital world.</p>
+      <p>Life doesn't always follow the path we plan. Family responsibilities meant formal tech courses were out of reach, so I channelled my energy into supporting the people I love — and into finding beauty in the world around me.</p>
+      <p><strong>Photography</strong> became that outlet. Armed with nothing but my smartphone, I wander into nature and try to capture moments that words can't quite hold — moonlit clouds, dewy leaves, bare branches against a glowing sun, the stillness of a twilight pond. I'm not a professional; I'm just someone who sees.</p>
+      <div class="about-tags">
+        <span class="about-tag">Smartphone Photography</span>
+        <span class="about-tag">Mathematics Graduate</span>
+        <span class="about-tag">Self-taught in Tech</span>
+        <span class="about-tag">Nature Explorer</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="gallery">
+  <div class="gal-head rv">
+    <p class="s-label center">Portfolio</p>
+    <h2 class="s-title" style="text-align:center">My Nature Gallery</h2>
+    <p class="s-desc" style="margin:0 auto 3rem;text-align:center">A curated collection of moments captured through my smartphone lens — from moonlit skies to macro dewdrops.</p>
+  </div>
+  <div class="gal-filters rv">
+    <button class="f-btn on" data-filter="all">All</button>
+    <button class="f-btn" data-filter="sky">Sky &amp; Light</button>
+    <button class="f-btn" data-filter="flora">Flora</button>
+    <button class="f-btn" data-filter="fauna">Fauna</button>
+    <button class="f-btn" data-filter="macro">Macro</button>
+    <button class="f-btn" data-filter="landscape">Landscape</button>
+  </div>
+  <div class="gal-grid" id="galGrid">
+
+    <div class="gal-item rv" data-cat="sky"><div class="gal-card" data-title="Veiled Moon" data-loc="Night Sky"><img src="./images/FILE3088.JPG" alt="Moon glowing behind dramatic clouds" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Veiled Moon</p><p class="gal-card-l">Night Sky</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="flora"><div class="gal-card" data-title="Chilli Blossom" data-loc="Kitchen Garden"><img src="./images/FILE3404.JPG" alt="White chilli flower on a lush green plant" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Chilli Blossom</p><p class="gal-card-l">Kitchen Garden</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="fauna"><div class="gal-card" data-title="The Predator" data-loc="Home Verandah"><img src="./images/FILE3405.JPG" alt="Praying mantis on a wet floor, vivid green against B&amp;W background" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">The Predator</p><p class="gal-card-l">Home Verandah</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="landscape"><div class="gal-card" data-title="The Lone Sentinel" data-loc="Open Field, Dusk"><img src="./images/FILE3902.JPG" alt="Lone tree silhouette against a soft dusk sky over an open field" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">The Lone Sentinel</p><p class="gal-card-l">Open Field, Dusk</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="sky"><div class="gal-card" data-title="Painted Horizon" data-loc="Village Outskirts"><img src="./images/FILE3905.JPG" alt="Sweeping sunset sky with layered clouds and tree silhouettes" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Painted Horizon</p><p class="gal-card-l">Village Outskirts</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="sky"><div class="gal-card" data-title="Fire &amp; Blue" data-loc="Open Skyline"><img src="./images/FILE3914.JPG" alt="Golden-orange clouds dramatic against a blue sunset sky" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Fire &amp; Blue</p><p class="gal-card-l">Open Skyline</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="landscape"><div class="gal-card" data-title="Still Waters" data-loc="Village Pond, Twilight"><img src="./images/FILE4949.JPG" alt="Pink-purple clouds reflected in a perfectly still pond at twilight" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Still Waters</p><p class="gal-card-l">Village Pond, Twilight</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="macro"><div class="gal-card" data-title="Tiny Universe" data-loc="Roadside Wildflower"><img src="./images/HMD Global934.JPG" alt="Clusters of tiny pink-purple wildflower buds in macro" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Tiny Universe</p><p class="gal-card-l">Roadside Wildflower</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="macro"><div class="gal-card" data-title="After the Rain" data-loc="Garden Bush"><img src="./images/IMG20260101084511.jpg" alt="Perfect rain droplets on rich green leaves" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">After the Rain</p><p class="gal-card-l">Garden Bush</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="macro"><div class="gal-card" data-title="Drops &amp; Light" data-loc="Morning Garden"><img src="./images/Nokia 4.25066.JPG" alt="Multiple rain-wet leaves catching morning light" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Drops &amp; Light</p><p class="gal-card-l">Morning Garden</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="sky"><div class="gal-card" data-title="Reaching for the Sun" data-loc="Rooftop, Winter Haze"><img src="./images/Nokia 4.25052.JPG" alt="Bare budding branch silhouetted against a hazy white sun" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Reaching for the Sun</p><p class="gal-card-l">Rooftop, Winter Haze</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="flora"><div class="gal-card" data-title="Crimson Brush" data-loc="Bottlebrush Tree"><img src="./images/Nokia 4.25053.JPG" alt="Vibrant red bottlebrush flower against a clear blue sky" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Crimson Brush</p><p class="gal-card-l">Bottlebrush Tree</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="flora"><div class="gal-card" data-title="Dark Canopy" data-loc="Bottlebrush Grove"><img src="./images/Nokia 4.25055.JPG" alt="Moody dark-toned bottlebrush branches with hanging seed pods" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Dark Canopy</p><p class="gal-card-l">Bottlebrush Grove</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="landscape"><div class="gal-card" data-title="Infinite Track" data-loc="Railway Line, Dawn"><img src="./images/Nokia 4.25059.JPG" alt="Railway tracks converging to a vanishing point flanked by trees" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Infinite Track</p><p class="gal-card-l">Railway Line, Dawn</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="macro"><div class="gal-card" data-title="Nature's Earbuds" data-loc="Rooftop Plant"><img src="./images/Nokia 4.25060.JPG" alt="Earphones hanging on a plant branch with a sun lens flare behind" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Nature's Earbuds</p><p class="gal-card-l">Rooftop Plant</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="sky"><div class="gal-card" data-title="Iron Sunrise" data-loc="Rooftop Grill"><img src="./images/Nokia 4.25066.JPG" alt="Setting sun seen through a rusted iron lattice grill" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Iron Sunrise</p><p class="gal-card-l">Rooftop Grill</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="sky"><div class="gal-card" data-title="Ember Crown" data-loc="Bare Winter Tree"><img src="./images/Nokia 4.25068.JPG" alt="Bare tree branches silhouetted against a glowing orange sunset sun" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Ember Crown</p><p class="gal-card-l">Bare Winter Tree</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="flora"><div class="gal-card" data-title="Green Chillies" data-loc="Kitchen Garden"><img src="./images/Nokia 4.25073.JPG" alt="Clusters of green chilli peppers hanging on a lush plant" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Green Chillies</p><p class="gal-card-l">Kitchen Garden</p></div></div></div></div>
+
+    <div class="gal-item rv" data-cat="flora"><div class="gal-card" data-title="Garden Light" data-loc="Home Garden"><img src="./images/FILE2115.JPG" alt="Light filtering through garden foliage" loading="lazy"/><div class="gal-card-ov"><div><p class="gal-card-t">Garden Light</p><p class="gal-card-l">Home Garden</p></div></div></div></div>
+
+  </div>
+</section>
+
+<section id="contact">
+  <div class="contact-inner rv">
+    <p class="s-label center">Get in Touch</p>
+    <h2 class="s-title" style="text-align:center">Contact</h2>
+    <p class="s-desc" style="margin:0 auto;text-align:center">I'd love to hear from you — whether you have a question about a photo, want to collaborate, or simply want to say hello.</p>
+    <div class="contact-card">
+      <div class="contact-icon">
+        <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <span class="contact-lbl">Email</span>
+      <a href="mailto:rahulkumar_mj@zohomail.in" class="contact-link">rahulkumar_mj@zohomail.in</a>
+      <div class="contact-div"></div>
+      <div class="contact-social">
+        <a href="#" class="soc-link">Instagram</a>
+        <a href="#" class="soc-link">Twitter / X</a>
+        <a href="#" class="soc-link">LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>© 2025 Rahul · Nature Photography</span>
+  <span>Every shot captured on a Smartphone · Every moment, real.</span>
+</footer>
+
+<div class="lightbox" id="lb">
+  <button class="lb-close" id="lbClose">✕</button>
+  <button class="lb-arr prev" id="lbPrev">‹</button>
+  <button class="lb-arr next" id="lbNext">›</button>
+  <img id="lbImg" src="" alt=""/>
+  <div class="lb-meta"><p class="lb-meta-t" id="lbT"></p><p class="lb-meta-l" id="lbL"></p></div>
+</div>
+
+<!-- ═══ THREE.JS ═══ -->
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const box = document.getElementById('heroCanvas');
+const mob = window.innerWidth < 768;
+const W = window.innerWidth, H = window.innerHeight;
+
+/* Scene */
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(50, W/H, 0.1, 100);
+cam.position.set(0, 0, 28);
+
+const ren = new THREE.WebGLRenderer({ alpha: true, antialias: false });
+ren.setSize(W, H);
+ren.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+box.appendChild(ren.domElement);
+
+/* Glow texture */
+function glow(r,g,b){
+  const c=document.createElement('canvas');c.width=c.height=64;
+  const x=c.getContext('2d'),gr=x.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,`rgba(${r},${g},${b},1)`);
+  gr.addColorStop(0.3,`rgba(${r},${g},${b},0.4)`);
+  gr.addColorStop(1,`rgba(0,0,0,0)`);
+  x.fillStyle=gr;x.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(c);
+}
+const gTex = glow(232,145,58);
+const dTex = glow(180,120,50);
+
+/* Wireframe icosahedron (inner) */
+const ico1 = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(4.5, 1),
+  new THREE.MeshBasicMaterial({ color:0xe8913a, wireframe:true, transparent:true, opacity:0.07 })
+);
+ico1.position.set(4.5, 0, 0);
+scene.add(ico1);
+
+/* Wireframe icosahedron (outer, low-poly) */
+const ico2 = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(7, 0),
+  new THREE.MeshBasicMaterial({ color:0xe8913a, wireframe:true, transparent:true, opacity:0.025 })
+);
+ico2.position.set(4.5, 0, 0);
+scene.add(ico2);
+
+/* Particle sphere */
+const PN = mob ? 160 : 380;
+const pp = new Float32Array(PN*3), ps = new Float32Array(PN), ph = new Float32Array(PN);
+for(let i=0;i<PN;i++){
+  const th=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1), r=4+Math.random()*4.5;
+  pp[i*3]=r*Math.sin(phi)*Math.cos(th)+4.5;
+  pp[i*3+1]=r*Math.sin(phi)*Math.sin(th);
+  pp[i*3+2]=r*Math.cos(phi);
+  ps[i]=0.15+Math.random()*0.5;
+  ph[i]=Math.random()*Math.PI*2;
+}
+const pG=new THREE.BufferGeometry();
+pG.setAttribute('position',new THREE.BufferAttribute(pp,3));
+scene.add(new THREE.Points(pG,new THREE.PointsMaterial({map:gTex,size:.65,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true})));
+
+/* Ambient bokeh */
+const AN = mob ? 20 : 55;
+const ap = new Float32Array(AN*3);
+for(let i=0;i<AN;i++){
+  ap[i*3]=(Math.random()-.5)*70+4.5;
+  ap[i*3+1]=(Math.random()-.5)*45;
+  ap[i*3+2]=(Math.random()-.5)*35-12;
+}
+const aG=new THREE.BufferGeometry();
+aG.setAttribute('position',new THREE.BufferAttribute(ap,3));
+scene.add(new THREE.Points(aG,new THREE.PointsMaterial({map:dTex,size:2.8,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true})));
+
+/* Mouse */
+let mx=0,my=0;
+window.addEventListener('mousemove',e=>{mx=(e.clientX/W-.5)*2;my=(e.clientY/H-.5)*2});
+
+/* Animate */
+const clk=new THREE.Clock();
+(function loop(){
+  requestAnimationFrame(loop);
+  const t=clk.getElapsedTime();
+
+  ico1.rotation.x=t*.04;ico1.rotation.y=t*.065;
+  ico2.rotation.x=-t*.025;ico2.rotation.y=-t*.04;
+
+  const pa=pG.attributes.position.array;
+  for(let i=0;i<PN;i++){
+    const s=ps[i],p=ph[i];
+    pa[i*3]+=Math.sin(t*s+p)*.003;
+    pa[i*3+1]+=Math.cos(t*s*.8+p)*.002;
+    pa[i*3+2]+=Math.sin(t*s*.5+p*2)*.002;
+  }
+  pG.attributes.position.needsUpdate=true;
+
+  cam.position.x+=(mx*2.5-cam.position.x)*.018;
+  cam.position.y+=(-my*1.5-cam.position.y)*.018;
+
+  const sf=Math.min(scrollY/(H*.55),1);
+  cam.position.z=28-sf*10;
+  box.style.opacity=String(1-sf);
+
+  cam.lookAt(4.5,0,0);
+  ren.render(scene,cam);
+})();
+
+window.addEventListener('resize',()=>{
+  const w=innerWidth,h=innerHeight;
+  cam.aspect=w/h;cam.updateProjectionMatrix();
+  ren.setSize(w,h);
+});
+
+document.getElementById('loader').classList.add('hidden');
+</script>
+
+<!-- ═══ INTERACTIONS ═══ -->
+<script>
+setTimeout(()=>document.getElementById('loader').classList.add('hidden'),3500);
+const isTouch='ontouchstart'in window||navigator.maxTouchPoints>0;
+
+/* Scroll progress */
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement.scrollHeight-innerHeight;
+  document.getElementById('scrollProg').style.width=(scrollY/h*100)+'%';
+  document.getElementById('mainNav').classList.toggle('scrolled',scrollY>60);
+},{passive:true});
+
+/* Mobile nav */
+const ham=document.getElementById('navHam'),nl=document.getElementById('navLinks');
+ham.addEventListener('click',()=>{ham.classList.toggle('on');nl.classList.toggle('open');document.body.style.overflow=nl.classList.contains('open')?'hidden':''});
+nl.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{ham.classList.remove('on');nl.classList.remove('open');document.body.style.overflow=''}));
+
+/* Gallery filters */
+const fBtns=document.querySelectorAll('.f-btn'),gItems=document.querySelectorAll('.gal-item');
+fBtns.forEach(b=>b.addEventListener('click',()=>{
+  fBtns.forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  const f=b.dataset.filter;let d=0;
+  gItems.forEach(it=>{
+    const show=f==='all'||it.dataset.cat===f;
+    if(show){it.style.display='';it.style.animation='none';it.offsetHeight;it.style.animation=`cardIn .4s ease ${d}s both`;d+=.04}
+    else{it.style.display='none';it.style.animation='none'}
+  });
+}));
+
+/* Lightbox */
+const lb=document.getElementById('lb'),lbI=document.getElementById('lbImg'),lbT=document.getElementById('lbT'),lbL=document.getElementById('lbL');
+let ci=0;
+function vis(){return[...gItems].filter(i=>i.style.display!=='none').map(i=>i.querySelector('.gal-card'))}
+function show(idx){const c=vis();ci=(idx+c.length)%c.length;const v=c[ci];lbI.src=v.querySelector('img').src;lbI.alt=v.querySelector('img').alt;lbT.textContent=v.dataset.title||'';lbL.textContent=v.dataset.loc||'';lbI.style.transform='scale(.92)';requestAnimationFrame(()=>{lbI.style.transform=''})}
+function openLb(i){show(i);lb.classList.add('open');document.body.style.overflow='hidden'}
+function closeLb(){lb.classList.remove('open');document.body.style.overflow=''}
+document.querySelectorAll('.gal-card').forEach(c=>c.addEventListener('click',()=>openLb(vis().indexOf(c))));
+document.getElementById('lbClose').addEventListener('click',closeLb);
+lb.addEventListener('click',e=>{if(e.target===lb)closeLb()});
+document.getElementById('lbPrev').addEventListener('click',e=>{e.stopPropagation();show(ci-1)});
+document.getElementById('lbNext').addEventListener('click',e=>{e.stopPropagation();show(ci+1)});
+document.addEventListener('keydown',e=>{if(!lb.classList.contains('open'))return;if(e.key==='Escape')closeLb();if(e.key==='ArrowLeft')show(ci-1);if(e.key==='ArrowRight')show(ci+1)});
+
+/* Touch swipe */
+let tx=0;
+lb.addEventListener('touchstart',e=>{tx=e.changedTouches[0].screenX},{passive:true});
+lb.addEventListener('touchend',e=>{const d=e.changedTouches[0].screenX-tx;if(Math.abs(d)>50)show(ci+(d>0?-1:1))});
+
+/* Scroll reveal */
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');io.unobserve(e.target)}})},{threshold:.08});
+document.querySelectorAll('.rv,.rv-l,.rv-r').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
